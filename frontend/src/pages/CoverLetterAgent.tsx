@@ -203,7 +203,7 @@ const CoverLetterAgent = () => {
         <button
           onClick={generateCoverLetter}
           disabled={isGenerating || resumes.length === 0 || (inputType === 'saved' && savedApplications.length === 0)}
-          className="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-primary hover:bg-primary/90 text-quaternary px-8 py-4 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGenerating ? (
             <>

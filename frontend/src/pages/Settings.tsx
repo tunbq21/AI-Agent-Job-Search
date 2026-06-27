@@ -156,7 +156,7 @@ const Settings = () => {
       {!isProcessing && !analysis && (
         <div className="space-y-6">
           <div className="glass p-6 rounded-2xl space-y-4">
-            <h2 className="text-lg font-bold text-content-strong border-b border-[#3b3d54] pb-2">Search Preferences & Filters</h2>
+            <h2 className="text-lg font-bold text-content-strong border-b border-surface-border pb-2">Search Preferences & Filters</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-content-muted font-semibold mb-1 text-sm">
@@ -176,7 +176,7 @@ const Settings = () => {
                   onChange={(e) => setCurrentJobInput(e.target.value)}
                   onKeyDown={handleJobKeyDown}
                   placeholder="e.g. Frontend Developer"
-                  className="w-full bg-[#1e1e2f] border border-[#3b3d54] text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
+                  className="w-full bg-surface border border-surface-border text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
                 />
               </div>
               <div>
@@ -186,7 +186,7 @@ const Settings = () => {
                 <select 
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-[#1e1e2f] border border-[#3b3d54] text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
+                  className="w-full bg-surface border border-surface-border text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
                 >
                   <option value="">Any Location / Toàn quốc</option>
                   <option value="Hồ Chí Minh">Hồ Chí Minh</option>
@@ -202,7 +202,7 @@ const Settings = () => {
                 <select 
                   value={timeFilter}
                   onChange={(e) => setTimeFilter(e.target.value)}
-                  className="w-full bg-[#1e1e2f] border border-[#3b3d54] text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
+                  className="w-full bg-surface border border-surface-border text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
                 >
                   <option value="">Any Time</option>
                   <option value="24h">Past 24 hours</option>
@@ -219,7 +219,7 @@ const Settings = () => {
                 value={preference}
                 onChange={(e) => setPreference(e.target.value)}
                 placeholder="e.g. I want to find AI Automation jobs or startup environments..."
-                className="w-full bg-[#1e1e2f] border border-[#3b3d54] text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none h-20 text-sm shadow-sm"
+                className="w-full bg-surface border border-surface-border text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none h-20 text-sm shadow-sm"
               />
             </div>
           </div>
@@ -229,7 +229,7 @@ const Settings = () => {
             className={`border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300
               ${isDragActive 
                 ? 'border-primary bg-primary/10 shadow-inner' 
-                : 'border-[#3b3d54] bg-[#27293d] hover:border-primary hover:bg-[#2a2d42] shadow-sm'}`}
+                : 'border-surface-border bg-surface-alt hover:border-primary hover:bg-surface-alt/50 shadow-sm'}`}
           >
             <input {...getInputProps()} />
             <UploadCloud className={`w-16 h-16 mx-auto mb-4 ${isDragActive ? 'text-primary' : 'text-content-muted'}`} />
@@ -242,10 +242,10 @@ const Settings = () => {
 
           {savedResumes.length > 0 && (
             <div className="glass p-6 rounded-2xl mt-8">
-              <h2 className="text-lg font-bold text-content-strong border-b border-[#3b3d54] pb-2 mb-4">Saved CVs</h2>
+              <h2 className="text-lg font-bold text-content-strong border-b border-surface-border pb-2 mb-4">Saved CVs</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {savedResumes.map((resume) => (
-                  <div key={resume.id} className="bg-[#1e1e2f] border border-[#3b3d54] p-4 rounded-xl flex flex-col gap-3">
+                  <div key={resume.id} className="bg-surface border border-surface-border p-4 rounded-xl flex flex-col gap-3">
                     <div className="flex justify-between items-start">
                       <div className="font-semibold text-content-strong truncate pr-2">{resume.filename}</div>
                     </div>
@@ -278,7 +278,7 @@ const Settings = () => {
           animate={{ opacity: 1 }}
           className="glass p-12 flex flex-col items-center justify-center rounded-2xl"
         >
-          <div className="w-12 h-12 border-4 border-[#3b3d54] border-t-primary rounded-full animate-spin mb-4"></div>
+          <div className="w-12 h-12 border-4 border-surface-border border-t-primary rounded-full animate-spin mb-4"></div>
           <div className="text-lg text-content-strong font-medium animate-pulse">
             AI Agent is reading your CV...
           </div>
@@ -292,7 +292,7 @@ const Settings = () => {
             animate={{ opacity: 1, y: 0 }}
             className="glass p-8 rounded-2xl"
           >
-            <div className="flex items-center gap-3 mb-6 border-b border-[#3b3d54] pb-4">
+            <div className="flex items-center gap-3 mb-6 border-b border-surface-border pb-4">
               <CheckCircle className="text-quaternary w-8 h-8" />
               <div>
                 <h2 className="text-2xl font-bold text-content-strong">Profile Analyzed Successfully</h2>
@@ -303,13 +303,13 @@ const Settings = () => {
             <p className="text-content-strong text-lg leading-relaxed mb-8">{analysis.summary}</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-[#1e1e2f] p-6 rounded-xl border border-[#3b3d54] shadow-sm flex flex-col justify-center">
+              <div className="bg-surface p-6 rounded-xl border border-surface-border shadow-sm flex flex-col justify-center">
                 <strong className="text-secondary text-xs font-bold uppercase tracking-wider block mb-1">Total Experience</strong>
                 <div className="text-3xl font-extrabold text-content-strong">
                   {analysis.experience_years} <span className="text-lg text-content-muted font-semibold">Years</span>
                 </div>
               </div>
-              <div className="bg-[#1e1e2f] p-6 rounded-xl border border-[#3b3d54] shadow-sm flex flex-col justify-center">
+              <div className="bg-surface p-6 rounded-xl border border-surface-border shadow-sm flex flex-col justify-center">
                 <strong className="text-primary text-xs font-bold uppercase tracking-wider block mb-1">Desired Roles</strong>
                 <div className="text-lg font-bold text-content-strong leading-snug">
                   {analysis.desired_roles.join(', ')}
@@ -321,7 +321,7 @@ const Settings = () => {
               <strong className="text-content-muted text-xs font-bold uppercase tracking-wider block mb-4">Core Skills Detected</strong>
               <div className="flex flex-wrap gap-2.5">
                 {analysis.skills.map((skill, idx) => (
-                  <span key={idx} className="bg-[#1e1e2f] text-content-strong border border-[#3b3d54] px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all hover:border-primary/50">
+                  <span key={idx} className="bg-surface text-content-strong border border-surface-border px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all hover:border-primary/50">
                     {skill}
                   </span>
                 ))}
@@ -334,7 +334,7 @@ const Settings = () => {
                 setFile(null);
                 setPreviousFilename(null);
               }}
-              className="mt-10 bg-[#1e1e2f] hover:bg-[#2a2d42] text-content-strong px-6 py-3 rounded-xl font-bold transition-colors border border-[#3b3d54] shadow-sm cursor-pointer"
+              className="mt-10 bg-surface hover:bg-surface-alt/50 text-content-strong px-6 py-3 rounded-xl font-bold transition-colors border border-surface-border shadow-sm cursor-pointer"
             >
               Back to CV Manager / Upload
             </button>

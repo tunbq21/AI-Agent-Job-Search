@@ -59,7 +59,7 @@ const Kanban = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="w-12 h-12 border-4 border-[#3b3d54] border-t-primary rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-surface-border border-t-primary rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -76,8 +76,8 @@ const Kanban = () => {
           const colApps = apps.filter((a) => a.status === col);
           
           return (
-            <div key={col} className="bg-[#27293d] border border-[#3b3d54] rounded-2xl flex flex-col h-[calc(100vh-16rem)] overflow-hidden shadow-sm">
-              <div className="p-4 border-b border-[#3b3d54] bg-[#27293d]">
+            <div key={col} className="bg-surface-alt border border-surface-border rounded-2xl flex flex-col h-[calc(100vh-16rem)] overflow-hidden shadow-sm">
+              <div className="p-4 border-b border-surface-border bg-surface-alt">
                 <h3 className="font-bold text-content-strong flex items-center justify-between">
                   {col}
                   <span className="bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full text-xs font-bold">
@@ -93,7 +93,7 @@ const Kanban = () => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     key={app.id} 
-                    className="bg-[#1e1e2f] border border-[#3b3d54] p-4 rounded-xl cursor-grab active:cursor-grabbing hover:border-primary hover:shadow-md transition-all duration-300 shadow-sm"
+                    className="bg-surface border border-surface-border p-4 rounded-xl cursor-grab active:cursor-grabbing hover:border-primary hover:shadow-md transition-all duration-300 shadow-sm"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-xs font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded">
@@ -112,7 +112,7 @@ const Kanban = () => {
                     ) : (
                       <button 
                         onClick={() => generateCoverLetter(app.id)}
-                        className="w-full mb-4 text-xs bg-[#27293d] hover:bg-[#2a2d42] text-content-strong border border-[#3b3d54] py-2 rounded-xl transition-colors flex items-center justify-center gap-1.5 font-bold cursor-pointer"
+                        className="w-full mb-4 text-xs bg-surface-alt hover:bg-surface-alt/50 text-content-strong border border-surface-border py-2 rounded-xl transition-colors flex items-center justify-center gap-1.5 font-bold cursor-pointer"
                       >
                         <FileText size={14} /> Generate Cover Letter
                       </button>
@@ -130,7 +130,7 @@ const Kanban = () => {
                 ))}
                 
                 {colApps.length === 0 && (
-                  <div className="text-center text-content-muted text-xs py-8 border border-dashed border-[#3b3d54] rounded-xl bg-[#1e1e2f]/50">
+                  <div className="text-center text-content-muted text-xs py-8 border border-dashed border-surface-border rounded-xl bg-surface/50">
                     No applications
                   </div>
                 )}

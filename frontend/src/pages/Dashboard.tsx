@@ -97,7 +97,7 @@ const Dashboard = () => {
       ) : (
         <div className="glass p-8 rounded-2xl text-center">
           <p className="text-content-muted mb-4">No CV profile found. Please upload a CV in Settings.</p>
-          <a href="/settings" className="inline-block bg-primary text-white px-6 py-2 rounded-xl font-bold">Go to Settings</a>
+          <a href="/settings" className="inline-block bg-primary text-quaternary px-6 py-2 rounded-xl font-bold">Go to Settings</a>
         </div>
       )}
     </div>

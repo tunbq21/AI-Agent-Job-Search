@@ -104,7 +104,7 @@ const Jobs = () => {
         <button 
           onClick={syncJobs}
           disabled={syncing}
-          className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 disabled:from-[#3b3d54] disabled:to-[#3b3d54] disabled:text-content-muted text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md cursor-pointer disabled:cursor-not-allowed flex items-center gap-2"
+          className="bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 disabled:from-surface-border disabled:to-surface-border disabled:text-content-muted text-quaternary px-6 py-3 rounded-xl font-bold transition-all shadow-md cursor-pointer disabled:cursor-not-allowed flex items-center gap-2"
         >
           {syncing ? (
             <>
@@ -126,14 +126,14 @@ const Jobs = () => {
             placeholder="Search by job title, company, description..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#1e1e2f] border border-[#3b3d54] text-content-strong pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
+            className="w-full bg-surface border border-surface-border text-content-strong pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
           />
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <select
             value={selectedLocation}
             onChange={(e) => setSelectedLocation(e.target.value)}
-            className="bg-[#1e1e2f] border border-[#3b3d54] text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
+            className="bg-surface border border-surface-border text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
           >
             <option value="">All Locations</option>
             <option value="Hồ Chí Minh">Hồ Chí Minh</option>
@@ -144,7 +144,7 @@ const Jobs = () => {
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="bg-[#1e1e2f] border border-[#3b3d54] text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
+            className="bg-surface border border-surface-border text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
           >
             <option value="">All Platforms</option>
             <option value="ITviec">ITviec</option>
@@ -155,7 +155,7 @@ const Jobs = () => {
           <select
             value={selectedTime}
             onChange={(e) => setSelectedTime(e.target.value)}
-            className="bg-[#1e1e2f] border border-[#3b3d54] text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
+            className="bg-surface border border-surface-border text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
           >
             <option value="">Any Time</option>
             <option value="24h">Past 24 hours</option>
@@ -167,12 +167,12 @@ const Jobs = () => {
 
       {loading ? (
         <div className="flex justify-center items-center py-20">
-          <div className="w-12 h-12 border-4 border-[#3b3d54] border-t-primary rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-surface-border border-t-primary rounded-full animate-spin"></div>
         </div>
       ) : (
         <>
           {filteredJobs.length === 0 ? (
-            <div className="text-center py-20 glass rounded-2xl border border-[#3b3d54]">
+            <div className="text-center py-20 glass rounded-2xl border border-surface-border">
               <p className="text-content-muted text-lg font-medium">No matching jobs found.</p>
               <p className="text-content-muted text-sm mt-1">Try resetting your filters or click "Sync Latest Jobs".</p>
             </div>
@@ -184,7 +184,7 @@ const Jobs = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-[#27293d] border border-[#3b3d54] p-6 rounded-2xl flex flex-col hover:-translate-y-1 hover:shadow-md hover:border-primary transition-all duration-350 cursor-pointer group shadow-sm"
+                  className="bg-surface-alt border border-surface-border p-6 rounded-2xl flex flex-col hover:-translate-y-1 hover:shadow-md hover:border-primary transition-all duration-350 cursor-pointer group shadow-sm"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="w-12 h-12 bg-primary/10 border border-primary/30 rounded-xl flex items-center justify-center text-xl font-extrabold text-primary shadow-sm">
@@ -201,7 +201,7 @@ const Jobs = () => {
                   </p>
 
                   {job.description && (
-                    <p className="text-content-muted text-xs line-clamp-3 mb-4 bg-[#1e1e2f] p-2.5 rounded-lg border border-[#3b3d54] font-medium">
+                    <p className="text-content-muted text-xs line-clamp-3 mb-4 bg-surface p-2.5 rounded-lg border border-surface-border font-medium">
                       {job.description}
                     </p>
                   )}
