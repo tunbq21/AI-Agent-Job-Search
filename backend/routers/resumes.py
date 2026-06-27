@@ -4,7 +4,7 @@ from sqlalchemy import select
 from typing import List
 
 from database import get_db
-import models
+from model import models
 from agents.matcher import process_cv, find_matching_jobs
 
 router = APIRouter(prefix="/resumes", tags=["Resumes"])

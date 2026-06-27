@@ -85,7 +85,7 @@ AI-Agent-Job-Search/
 │   ├── main.py            # FastAPI entry point
 │   ├── agent.py           # Core AI processing (Gemini integration)
 │   ├── database.py        # Database connection logic
-│   ├── models.py          # SQLAlchemy models (User, Resume, Job, Application)
+│   ├── model/models.py          # SQLAlchemy models (User, Resume, Job, Application)
 │   ├── init_db.py         # Script to initialize DB schemas
 │   ├── routers/           # API Endpoints (jobs, resumes, applications)
 │   └── requirements.txt

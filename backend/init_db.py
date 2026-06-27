@@ -1,6 +1,6 @@
 import asyncio
 from database import engine, Base
-import models
+from model import models
 
 async def init_models():
     async with engine.begin() as conn:

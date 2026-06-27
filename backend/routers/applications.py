@@ -4,7 +4,7 @@ from sqlalchemy import select
 from pydantic import BaseModel
 
 from database import get_db
-import models
+from model import models
 from agents.matcher import get_client
 
 router = APIRouter(prefix="/applications", tags=["Applications"])

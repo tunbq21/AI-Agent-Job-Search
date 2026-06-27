@@ -4,7 +4,7 @@ from sqlalchemy import select
 from pydantic import BaseModel
 
 from database import get_db
-import models
+from model import models
 from agents.cover_letter import generate_cover_letter
 
 router = APIRouter(prefix="/agents", tags=["Agents"])
