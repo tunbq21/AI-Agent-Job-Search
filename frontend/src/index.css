@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    color-scheme: light;
+  }
+  
+  body {
+    background-color: theme('colors.background');
+    color: theme('colors.content-strong');
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background-color: theme('colors.surface');
+    border: 1px solid theme('colors.surface-border');
+    box-shadow: 0 4px 6px -1px rgba(154, 156, 234, 0.1), 0 2px 4px -1px rgba(154, 156, 234, 0.06);
+  }
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    background-image: linear-gradient(to right, theme('colors.primary'), theme('colors.secondary'), theme('colors.tertiary'));
+  }
+}
