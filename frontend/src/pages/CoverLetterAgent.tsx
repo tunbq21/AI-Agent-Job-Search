@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FileText, Link as LinkIcon, RefreshCw, Briefcase, ChevronDown } from 'lucide-react';
+import { FileText, Link as LinkIcon, RefreshCw, Briefcase, ChevronDown, Type } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SavedResume {
@@ -26,6 +26,17 @@ const CoverLetterAgent = () => {
   const [inputType, setInputType] = useState<'url' | 'saved'>('saved');
   const [jobUrl, setJobUrl] = useState('');
   const [selectedJobId, setSelectedJobId] = useState<number | ''>('');
+  
+  const [wordCount, setWordCount] = useState('Ngắn gọn (~300 từ)');
+
+  const WORD_COUNT_OPTIONS = [
+    'Rất ngắn gọn (~150 từ)',
+    'Ngắn gọn (~300 từ)',
+    'Trung bình (~500 từ)',
+    'Chi tiết (~1000 từ)',
+    'Rất chi tiết (~1500 từ)',
+    'Cực kỳ chi tiết (>2000 từ)'
+  ];
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [coverLetter, setCoverLetter] = useState<string | null>(null);
@@ -89,7 +100,7 @@ const CoverLetterAgent = () => {
     setCoverLetter(null);
 
     try {
-      const payload: any = { cv_id: selectedCvId };
+      const payload: any = { cv_id: selectedCvId, word_count: wordCount };
       if (inputType === 'url') {
         payload.job_url = jobUrl;
       } else {
@@ -196,6 +207,27 @@ const CoverLetterAgent = () => {
               />
             </div>
           )}
+        </div>
+
+        {/* Step 3: Options */}
+        <div className="glass p-6 rounded-2xl md:col-span-2">
+          <h2 className="text-lg font-bold text-content-strong mb-4 flex items-center gap-2">
+            <span className="bg-tertiary/20 text-tertiary w-6 h-6 rounded-full flex items-center justify-center text-sm">3</span>
+            Customize Letter Length
+          </h2>
+          <div className="relative">
+             <Type className="absolute left-4 top-1/2 -translate-y-1/2 text-content-muted" size={18} />
+             <select
+               value={wordCount}
+               onChange={(e) => setWordCount(e.target.value)}
+               className="w-full bg-surface border border-surface-border text-content-strong pl-12 pr-10 py-3 rounded-xl appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-medium cursor-pointer shadow-sm"
+             >
+                {WORD_COUNT_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+             </select>
+             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-content-muted pointer-events-none" size={18} />
+          </div>
         </div>
       </div>
 

@@ -63,7 +63,13 @@ async def upload_resume(
         experience_years=analysis.get('experience_years', 0),
         desired_roles=analysis.get('desired_roles', []),
         summary=analysis.get('summary', ''),
-        preference=db_preference
+        preference=db_preference,
+        search_filters={
+            "job_title": job_title or "",
+            "location": location or "",
+            "time_filter": time_filter or "",
+            "preference": preference or ""
+        }
     )
     
     db.add(new_resume)
@@ -72,7 +78,7 @@ async def upload_resume(
     
     # Trigger Job Search with the filters
     try:
-        scraped_jobs = find_matching_jobs(analysis, preference, job_title=job_title, location=location)
+        scraped_jobs = find_matching_jobs(analysis, preference, job_title=job_title, location=location, time_filter=time_filter)
         for job_data in scraped_jobs:
             # Check if url already exists
             existing_job_query = await db.execute(select(models.Job).where(models.Job.url == job_data.get('url')))

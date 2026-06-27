@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FileText, ArrowRight, CheckCircle, Clock } from 'lucide-react';
+import { FileText, ArrowRight, CheckCircle, Clock, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Application {
@@ -56,6 +56,15 @@ const Kanban = () => {
     }
   };
 
+  const deleteApp = async (appId: number) => {
+    try {
+      await axios.delete(`http://localhost:8000/applications/${appId}`);
+      setApps(apps.filter(a => a.id !== appId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -99,7 +108,10 @@ const Kanban = () => {
                       <span className="text-xs font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded">
                         {app.match_percentage}% Match
                       </span>
-                      <span className="text-content-muted"><Clock size={14} /></span>
+                      <div className="flex gap-2 text-content-muted items-center">
+                        <button onClick={() => deleteApp(app.id)} className="hover:text-red-500"><Trash2 size={14} /></button>
+                        <span><Clock size={14} /></span>
+                      </div>
                     </div>
                     <h4 className="font-bold text-content-strong mb-1 text-sm">Job #{app.job_id}</h4>
                     <p className="text-xs text-content-muted mb-4 line-clamp-2 leading-relaxed">{app.match_reason}</p>

@@ -4,11 +4,14 @@ from google import genai
 from google.genai import types
 import PyPDF2
 from io import BytesIO
+from prompts.prompts import CV_EXTRACTOR_PROMPT, JOB_MATCHER_PROMPT
 
 # Try to get API key from environment
 # User will need to set this environment variable: set GEMINI_API_KEY=your_key
 # or we can use dotenv in the future
 API_KEY = os.environ.get("GEMINI_API_KEY")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+PRO_MODEL = os.environ.get("GEMINI_PRO_MODEL", "gemini-2.5-pro")
 
 def get_client():
     if not API_KEY:
@@ -39,25 +42,12 @@ def process_cv(content: bytes, filename: str, preference: str = None) -> dict:
     if preference:
         preference_text = f"\nCRITICAL INSTRUCTION: The candidate explicitly wants a job matching this description: '{preference}'. Act as an expert career coach. Heavily tailor the extracted 'skills', 'desired_roles', and 'summary' to emphasize any matching experience or potential for this specific role, even if they only have side projects or related fundamentals.\n"
 
-    prompt = f"""
-    You are an expert IT Recruiter AI. Please analyze the following CV text and extract the key information in JSON format.
-    The JSON should have the following schema:
-    {{
-        "skills": ["List", "of", "core", "IT", "skills", "frameworks", "languages"],
-        "experience_years": 3.5, // Total years of experience as a float
-        "desired_roles": ["Frontend Developer", "Fullstack Engineer"], // Guessed from their experience
-        "summary": "A short 2-sentence summary of the candidate's profile."
-    }}
-    {preference_text}
-    
-    CV Text:
-    {text}
-    """
+    prompt = CV_EXTRACTOR_PROMPT.format(preference_text=preference_text, text=text)
     
     client = get_client()
     
     response = client.models.generate_content(
-        model='gemini-2.5-pro',
+        model=PRO_MODEL,
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -70,7 +60,7 @@ def process_cv(content: bytes, filename: str, preference: str = None) -> dict:
     except json.JSONDecodeError:
         raise ValueError("Failed to parse Gemini response as JSON.")
 
-def find_matching_jobs(cv_data: dict, preference: str = None, job_title: str = None, location: str = None) -> list:
+def find_matching_jobs(cv_data: dict, preference: str = None, job_title: str = None, location: str = None, time_filter: str = None) -> list:
     """
     Given parsed CV data, searches for real matching jobs via Google Search Grounding.
     Step 1: Search the web.
@@ -79,68 +69,74 @@ def find_matching_jobs(cv_data: dict, preference: str = None, job_title: str = N
     client = get_client()
     
     # 1. Build the search query
-    roles_str = job_title if job_title else " OR ".join(cv_data.get('desired_roles', []))
+    roles_list = []
+    if job_title:
+        roles_list = [job_title]
+    elif cv_data.get('desired_roles'):
+        roles_list = cv_data.get('desired_roles', [])[:1] # Just use the top 1 role to avoid complex DDG query
+        
+    roles_str = f'"{roles_list[0]}"' if roles_list else ""
     if preference and not job_title:
         roles_str = preference
         
-    skills_str = " ".join(cv_data.get('skills', [])[:5]) # Top 5 skills
+    skills_str = " ".join(cv_data.get('skills', [])[:2]) # Top 2 skills
     location_query = f" {location}" if location else ""
-    search_query = f"Tuyển dụng {roles_str}{location_query} {skills_str} site:itviec.com OR site:topcv.vn OR site:linkedin.com/jobs"
     
-    # 2. Step 1: Search using Grounding (No JSON mode)
-    search_prompt = f"Please search the web for recent job postings matching this query: {search_query}. Return all the details you can find including Job Title, Company, Location, Salary (if any), and the direct URL to the job."
+    # Simplified query
+    search_query = f"{roles_str}{location_query} {skills_str} job Vietnam"
     
+    time_instruction = ""
+    if time_filter == "24h":
+        time_instruction = "posted in the past 24 hours"
+    elif time_filter == "7d":
+        time_instruction = "posted in the past week"
+    elif time_filter == "30d":
+        time_instruction = "posted in the past month"
+        
+    grounding_prompt = f"Search Google for: {search_query}. CRITICAL: ONLY find jobs {time_instruction if time_instruction else 'recently posted'}. Return the raw job postings text."
+    
+    # Use Google Search Grounding to bypass scraping blocks
     try:
         search_response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=search_prompt,
+            model=MODEL,
+            contents=grounding_prompt,
             config=types.GenerateContentConfig(
-                tools=[{"google_search": {}}],
-            ),
+                tools=[{"google_search": {}}]
+            )
         )
         raw_search_text = search_response.text
+        print("Successfully retrieved jobs via Google Grounding.")
     except Exception as e:
-        print("Search failed:", e)
+        print(f"Error fetching from Google Grounding: {e}")
         return []
 
     # 3. Step 2: Parse to JSON array
-    parse_prompt = f"""
-    You are an expert AI Job Matcher. 
-    Here is a candidate's profile:
-    {json.dumps(cv_data, indent=2)}
+    cv_data_str = json.dumps(cv_data, indent=2)
+    job_title_filter = job_title if job_title else 'Any role matching CV'
+    location_filter = location if location else 'Any location'
     
-    Candidate's search filters:
-    - Job Title Filter: {job_title or 'None'}
-    - Location Filter: {location or 'None'}
-    
-    Here is raw text retrieved from a Google Search for job postings:
-    {raw_search_text}
-    
-    Evaluate the jobs found in the text against the candidate's profile and the search filters (especially verifying if the job title and location match the candidate's preferences).
-    Return a JSON array of matches, where each item has:
-    {{
-        "title": "job title",
-        "company": "company name",
-        "location": "location",
-        "salary": "salary or 'Negotiable'",
-        "url": "url (must be a valid link from the text)",
-        "source": "Platform name (e.g. ITviec, TopCV)",
-        "match_percentage": 85, // integer 0-100 (score higher if it matches the job title/location filters!)
-        "match_reason": "Why this job is a good fit (1 sentence)."
-    }}
-    Only include jobs that have a match_percentage > 40.
-    Order by match_percentage descending.
-    """
+    parse_prompt = JOB_MATCHER_PROMPT.format(cv_data=cv_data_str,
+                                             job_title=job_title_filter,
+                                             location=location_filter,
+                                             raw_search_text=raw_search_text)
     
     try:
         parse_response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model=MODEL,
             contents=parse_prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
             ),
         )
-        matches = json.loads(parse_response.text)
+        text = parse_response.text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+            
+        matches = json.loads(text.strip())
         return matches
     except Exception as e:
         print("Parse failed:", e)

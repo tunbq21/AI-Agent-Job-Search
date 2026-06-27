@@ -27,6 +27,7 @@ class Resume(Base):
     desired_roles = Column(JSON)
     summary = Column(Text)
     preference = Column(Text, nullable=True) # User's explicit job preference
+    search_filters = Column(JSON) # Saved filter inputs
     
     owner = relationship("User", back_populates="resumes")
 

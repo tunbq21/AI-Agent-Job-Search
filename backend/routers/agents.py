@@ -13,6 +13,7 @@ class CoverLetterRequest(BaseModel):
     job_id: int = None
     job_url: str = None
     cv_id: int
+    word_count: str = "Ngắn gọn (~300 từ)"
     
 @router.post("/cover-letter")
 async def create_cover_letter(req: CoverLetterRequest, db: AsyncSession = Depends(get_db)):
@@ -42,17 +43,32 @@ async def create_cover_letter(req: CoverLetterRequest, db: AsyncSession = Depend
             "description": job.description
         }
     elif req.job_url:
-        # In a full implementation, we might scrape the URL here.
-        # For now, we just pass the URL.
-        job_data = {
-            "title": "Job from URL",
-            "company": "Company",
-            "description": f"Please refer to the job at this URL: {req.job_url}"
-        }
+        import requests
+        from bs4 import BeautifulSoup
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            resp = requests.get(req.job_url, headers=headers, timeout=10)
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            text_content = ' '.join(soup.stripped_strings)
+            
+            if not text_content:
+                raise ValueError("No content found")
+                
+            job_data = {
+                "title": "Job from URL",
+                "company": "Company",
+                "description": text_content[:5000]
+            }
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, 
+                detail="Không thể truy cập URL công việc này. Vui lòng kiểm tra lại link, có thể trang web yêu cầu đăng nhập hoặc chặn truy cập tự động."
+            )
     else:
         raise HTTPException(status_code=400, detail="Must provide job_id or job_url")
         
     # Generate
-    cover_letter_text = generate_cover_letter(cv_data, job_data)
+    cover_letter_text = generate_cover_letter(cv_data, job_data, word_count=req.word_count)
     
     return {"cover_letter": cover_letter_text}

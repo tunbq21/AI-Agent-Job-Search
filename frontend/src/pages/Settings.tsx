@@ -18,6 +18,7 @@ interface SavedResume {
   experience_years: number;
   desired_roles: string[];
   summary: string;
+  search_filters?: any;
 }
 
 const Settings = () => {
@@ -55,6 +56,14 @@ const Settings = () => {
           summary: latest.summary || ''
         });
         setPreviousFilename(latest.filename);
+
+        if (latest.search_filters) {
+          const f = latest.search_filters;
+          setJobTitles(f.job_title ? f.job_title.split(', ').filter(Boolean) : []);
+          setLocation(f.location || '');
+          setTimeFilter(f.time_filter || '');
+          setPreference(f.preference || '');
+        }
       }
     } catch (err) {
       console.error("Failed to fetch past resume analysis", err);
@@ -90,8 +99,15 @@ const Settings = () => {
     if (preference.trim()) {
       formData.append('preference', preference.trim());
     }
-    if (jobTitles.length > 0) {
-      formData.append('job_title', jobTitles.join(', '));
+    
+    // Combine saved tags with the unsubmitted input
+    const finalTitles = [...jobTitles];
+    if (currentJobInput.trim() && !finalTitles.includes(currentJobInput.trim())) {
+      finalTitles.push(currentJobInput.trim());
+    }
+    
+    if (finalTitles.length > 0) {
+      formData.append('job_title', finalTitles.join(', '));
     }
     if (location.trim()) {
       formData.append('location', location.trim());
@@ -131,6 +147,14 @@ const Settings = () => {
     });
     setPreviousFilename(resume.filename);
     setFile(null);
+    
+    if (resume.search_filters) {
+      const f = resume.search_filters;
+      setJobTitles(f.job_title ? f.job_title.split(', ').filter(Boolean) : []);
+      setLocation(f.location || '');
+      setTimeFilter(f.time_filter || '');
+      setPreference(f.preference || '');
+    }
   };
 
   const deleteResume = async (id: number) => {
@@ -143,6 +167,18 @@ const Settings = () => {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const clearAllData = async () => {
+    if (confirm("Are you sure you want to clear all jobs and applications?")) {
+      try {
+        await axios.delete('http://localhost:8000/jobs/');
+        await axios.delete('http://localhost:8000/applications/');
+        alert("All jobs and applications have been cleared.");
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -317,6 +353,16 @@ const Settings = () => {
               </div>
             </div>
 
+            <div className="mb-8 p-4 bg-surface-alt rounded-xl border border-surface-border">
+              <strong className="text-content-muted text-xs font-bold uppercase tracking-wider block mb-3">Your Search Settings</strong>
+              <div className="grid grid-cols-2 gap-4 text-sm text-content-strong">
+                <div><span className="text-content-muted font-semibold">Location:</span> {location || 'Any'}</div>
+                <div><span className="text-content-muted font-semibold">Time:</span> {timeFilter || 'Any'}</div>
+                <div className="col-span-2"><span className="text-content-muted font-semibold">Added Titles:</span> {jobTitles.join(', ') || 'Auto'}</div>
+                <div className="col-span-2"><span className="text-content-muted font-semibold">Context (Message):</span> {preference || 'None'}</div>
+              </div>
+            </div>
+
             <div>
               <strong className="text-content-muted text-xs font-bold uppercase tracking-wider block mb-4">Core Skills Detected</strong>
               <div className="flex flex-wrap gap-2.5">
@@ -341,6 +387,14 @@ const Settings = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div className="mt-12 pt-8 border-t border-surface-border">
+        <h2 className="text-xl font-bold text-red-500 mb-2">Danger Zone</h2>
+        <p className="text-content-muted text-sm mb-4">This action will permanently delete all scraped jobs and saved applications from your database.</p>
+        <button onClick={clearAllData} className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/30 px-6 py-3 rounded-xl font-bold transition-all shadow-sm cursor-pointer">
+          Clear All Jobs & Applications
+        </button>
+      </div>
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, MapPin, DollarSign, ExternalLink, Briefcase } from 'lucide-react';
+import { Search, MapPin, DollarSign, ExternalLink, Briefcase, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface Job {
   id: number;
@@ -46,10 +47,12 @@ const Jobs = () => {
       setTimeout(() => {
         fetchJobs();
         setSyncing(false);
+        toast.success('✨ AI Agent đã tìm xong! Các công việc phù hợp đang được hiển thị ở danh sách bên dưới.');
       }, 1500);
     } catch (err) {
       console.error(err);
       setSyncing(false);
+      toast.error('Lỗi khi đồng bộ công việc.');
     }
   };
 
@@ -60,16 +63,27 @@ const Jobs = () => {
         match_percentage: 85,
         match_reason: 'Manually saved from Find Jobs search page.'
       });
-      alert(`Job "${job.title}" has been saved to your Kanban tracker!`);
+      toast.success(`Đã lưu "${job.title}" vào Kanban!`);
     } catch (err) {
       console.error(err);
-      alert('Failed to save job to Kanban tracker.');
+      toast.error('Không thể lưu công việc.');
     }
   };
 
   const handleCopyLink = (url: string) => {
     navigator.clipboard.writeText(url);
-    alert('Job link copied to clipboard!');
+    toast.success('Đã copy link!');
+  };
+
+  const deleteJob = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:8000/jobs/${id}`);
+      setJobs(jobs.filter(j => j.id !== id));
+      toast.success('Đã xóa công việc khỏi danh sách!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Lỗi khi xóa công việc.');
+    }
   };
 
   const filteredJobs = jobs.filter(
@@ -234,6 +248,13 @@ const Jobs = () => {
                     <a href={job.url} target="_blank" rel="noreferrer" title="Open Link" className="w-10 h-10 bg-surface hover:bg-surface-alt text-content-muted hover:text-content-strong rounded-xl flex items-center justify-center transition-colors border border-surface-border shadow-sm">
                       <ExternalLink size={18} />
                     </a>
+                    <button 
+                      onClick={() => deleteJob(job.id)}
+                      className="w-10 h-10 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl flex items-center justify-center transition-colors border border-red-500/20 shadow-sm cursor-pointer"
+                      title="Delete Job"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </motion.div>
               ))}

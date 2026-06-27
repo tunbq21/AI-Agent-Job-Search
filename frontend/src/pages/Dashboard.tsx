@@ -14,16 +14,18 @@ const Dashboard = () => {
   const [analysis, setAnalysis] = useState<CVAnalysis | null>(null);
   const [previousFilename, setPreviousFilename] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [appCount, setAppCount] = useState(0);
+  const [avgMatch, setAvgMatch] = useState(0);
 
   useEffect(() => {
-    fetchResumes();
+    fetchDashboardData();
   }, []);
 
-  const fetchResumes = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/resumes/');
-      if (res.data && res.data.length > 0) {
-        const latest = res.data[res.data.length - 1];
+      const resResumes = await axios.get('http://localhost:8000/resumes/');
+      if (resResumes.data && resResumes.data.length > 0) {
+        const latest = resResumes.data[resResumes.data.length - 1];
         setAnalysis({
           skills: latest.skills || [],
           experience_years: latest.experience_years || 0,
@@ -32,8 +34,21 @@ const Dashboard = () => {
         });
         setPreviousFilename(latest.filename);
       }
+
+      const resApps = await axios.get('http://localhost:8000/applications/');
+      if (resApps.data) {
+        setAppCount(resApps.data.length);
+        if (resApps.data.length > 0) {
+            let totalMatch = 0;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            resApps.data.forEach((app: any) => {
+                totalMatch += app.match_percentage || 0;
+            });
+            setAvgMatch(Math.round(totalMatch / resApps.data.length));
+        }
+      }
     } catch (err) {
-      console.error('Failed to fetch past resume analysis', err);
+      console.error('Failed to fetch dashboard data', err);
     } finally {
       setIsLoading(false);
     }
@@ -137,14 +152,14 @@ const Dashboard = () => {
               <div className="absolute right-[-10px] top-[-10px] w-24 h-24 bg-gradient-to-br from-secondary/20 to-transparent rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
               <h3 className="text-sm font-bold text-content-muted uppercase tracking-wider mb-2">Profile Match</h3>
               <div className="text-4xl font-black text-content-strong flex items-baseline gap-1">
-                92<span className="text-2xl text-secondary">%</span>
+                {avgMatch}<span className="text-2xl text-secondary">%</span>
               </div>
             </div>
             <div className="bg-white rounded-[32px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-surface-border flex-1 flex flex-col justify-center relative overflow-hidden group">
               <div className="absolute right-[-10px] top-[-10px] w-24 h-24 bg-gradient-to-br from-primary/20 to-transparent rounded-full blur-xl group-hover:scale-150 transition-transform duration-500"></div>
               <h3 className="text-sm font-bold text-content-muted uppercase tracking-wider mb-2">Applications</h3>
               <div className="text-4xl font-black text-content-strong flex items-center gap-3">
-                12
+                {appCount}
                 <TrendingUp size={24} className="text-primary" />
               </div>
             </div>
