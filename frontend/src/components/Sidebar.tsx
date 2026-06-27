@@ -16,8 +16,8 @@ const Sidebar = () => {
     <div className="w-64 bg-surface border-r border-surface-border h-screen fixed left-0 top-0 flex flex-col z-20">
       <div className="p-6">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <span className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-sky-400"></span>
-          <span className="text-content-strong">Darkone</span>
+          <span className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-quaternary"></span>
+          <span className="text-content-strong text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">JobAura</span>
         </h1>
       </div>
 
