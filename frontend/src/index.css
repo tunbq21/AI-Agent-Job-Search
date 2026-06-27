@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #093C5D;
-  --color-surface: #3B7597;
-  --color-surface-alt: #2D5E7A;
-  --color-surface-border: #6FD1D7;
-  --color-primary: #5DF8D8;
-  --color-secondary: #6FD1D7;
-  --color-tertiary: #3B7597;
-  --color-quaternary: #093C5D;
-  --color-content-strong: #5DF8D8;
-  --color-content-muted: #6FD1D7;
+  --color-background: #F5F3ED;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F9FAFE;
+  --color-surface-border: #E2E8F0;
+  --color-primary: #F4A6A4;
+  --color-secondary: #A5CFC9;
+  --color-tertiary: #F4E3C5;
+  --color-quaternary: #1E293B;
+  --color-content-strong: #1E293B;
+  --color-content-muted: #64748b;
 }
 
 @layer base {
@@ -21,8 +21,16 @@
   
   body {
     background-color: var(--color-background);
+    background-image: url('../image/image_2.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     color: var(--color-content-strong);
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
   }
 }
 
@@ -30,13 +38,13 @@
   .glass {
     background-color: var(--color-surface);
     border: 1px solid var(--color-surface-border);
-    box-shadow: 0 4px 6px -1px rgba(154, 156, 234, 0.1), 0 2px 4px -1px rgba(154, 156, 234, 0.06);
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
   }
   .text-gradient {
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    background-image: linear-gradient(to right, var(--color-primary), var(--color-secondary), var(--color-tertiary));
+    background-image: linear-gradient(to right, var(--color-primary), var(--color-secondary));
   }
 }
