@@ -31,36 +31,54 @@ async def search_jobs_by_query(req: JobSearchQuery, db: AsyncSession = Depends(g
     
     if not scraped_jobs_data:
         return {"message": "No jobs found or error occurred."}
-        
-    new_jobs_count = 0
-    scraped_urls = [job_data.get('url', '') for job_data in scraped_jobs_data if job_data.get('url')]
     
-    existing_urls = set()
-    if scraped_urls:
-        existing_result = await db.execute(select(models.Job.url).where(models.Job.url.in_(scraped_urls)))
-        existing_urls = set(existing_result.scalars().all())
+    # Filter out invalid URLs and deduplicate within this batch
+    INVALID_URLS = {'N/A', 'n/a', '', '#', 'null', 'none', 'http://', 'https://'}
+    seen_in_batch: set[str] = set()
+    valid_jobs = []
+    for job in scraped_jobs_data:
+        url = (job.get('url') or '').strip()
+        if not url or url.lower() in INVALID_URLS or url in seen_in_batch:
+            continue
+        seen_in_batch.add(url)
+        valid_jobs.append(job)
 
-    for job_data in scraped_jobs_data:
-        url = job_data.get('url', '')
+    if not valid_jobs:
+        return {"message": "No jobs with valid URLs found."}
+        
+    scraped_urls = [j['url'].strip() for j in valid_jobs]
+    
+    existing_result = await db.execute(select(models.Job.url).where(models.Job.url.in_(scraped_urls)))
+    existing_urls = set(existing_result.scalars().all())
+
+    new_jobs_count = 0
+    for job_data in valid_jobs:
+        url = job_data['url'].strip()
         if url in existing_urls:
             continue
-            
+        existing_urls.add(url)  # mark as seen for this batch
+
         new_job = models.Job(
             title=job_data.get('title', 'Unknown Title')[:200],
             company=job_data.get('company', 'Unknown Company')[:200],
             location=job_data.get('location', 'Remote')[:200],
-            salary=job_data.get('salary', 'Negotiable')[:100],
+            salary=(job_data.get('salary') or 'Negotiable')[:100],
             description=job_data.get('description', '')[:1000],
-            url=job_data.get('url', '#')[:500],
+            url=url[:500],
             source=job_data.get('source', 'Web Search')[:50]
         )
         db.add(new_job)
         new_jobs_count += 1
         
     if new_jobs_count > 0:
-        await db.commit()
+        try:
+            await db.commit()
+        except Exception as e:
+            await db.rollback()
+            raise HTTPException(status_code=500, detail=f"DB error: {str(e)}")
         
-    return {"message": f"Successfully scraped and added {new_jobs_count} new jobs."}
+    return {"message": f"Successfully scraped and added {new_jobs_count} new jobs.", "count": new_jobs_count}
+
 
 @router.post("/scrape")
 async def trigger_scrape(db: AsyncSession = Depends(get_db)):

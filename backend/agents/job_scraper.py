@@ -76,11 +76,18 @@ def scrape_jobs_from_natural_query(user_query: str) -> list[dict]:
     """
     Searches the web for jobs based on a natural language query from the user,
     then uses Gemini to parse them into structured job data.
+    The raw_text from Gemini grounding already contains real job URLs.
     """
     if not user_query.strip():
         return []
-        
-    grounding_prompt = f"Search Google for: {user_query}. Return the raw job postings text for at least 30 distinct job listings. Please do your best to fetch as many relevant links and descriptions as possible."
+    
+    grounding_prompt = (
+        f"Search Google for job listings matching this request: {user_query}. "
+        "Find at least 20-30 distinct real job listings. "
+        "For EVERY job listing found, include: the exact job title, company name, "
+        "location, salary range if available, a short description, and the EXACT direct URL to the job posting. "
+        "List all jobs with their real URLs clearly."
+    )
     
     client = get_client()
     
@@ -93,32 +100,55 @@ def scrape_jobs_from_natural_query(user_query: str) -> list[dict]:
             )
         )
         raw_text = search_response.text
-        print("Successfully retrieved jobs via Google Grounding.")
+        print(f"Successfully retrieved jobs via Google Grounding. Raw text length: {len(raw_text)}")
     except Exception as e:
         print(f"Error fetching from Google Grounding: {e}")
         return []
     
-    prompt = JOB_SCRAPER_PROMPT.format(raw_text=raw_text)
+    # Use inline parse prompt - the raw_text already has real URLs from Gemini
+    parse_prompt = f"""You are an expert job data extractor.
+Below is text containing real job listings with real URLs.
+
+TEXT:
+{raw_text}
+
+Extract ALL job postings from the text above. For each job provide:
+- "title": job title
+- "company": company name (use "Unknown" if not found)
+- "location": location (use "Vietnam" if not specified)
+- "salary": salary range or "Negotiable"
+- "description": 1-2 sentence description
+- "url": The EXACT URL from the text (must start with http:// or https://). Skip job if no real URL found.
+- "source": platform name inferred from URL domain (e.g. itviec.com -> "ITviec")
+
+Rules:
+- Only include jobs where url starts with http:// or https://
+- Do NOT invent or modify URLs
+- Output ONLY a raw JSON array, no markdown fences, no explanation"""
     
     try:
         response = client.models.generate_content(
             model=MODEL,
-            contents=prompt
+            contents=parse_prompt
         )
         
         text = response.text.strip()
+        # Strip markdown fences if present
         if text.startswith("```json"):
             text = text[7:]
-        if text.startswith("```"):
+        elif text.startswith("```"):
             text = text[3:]
         if text.endswith("```"):
             text = text[:-3]
             
-        jobs = json.loads(text)
+        jobs = json.loads(text.strip())
+        print(f"Parsed {len(jobs)} jobs from Gemini.")
         return jobs
     except Exception as e:
         print(f"Error parsing with Gemini: {e}")
         return []
+
+
 
 async def match_score(cv_summary: str, cv_skills: list[str], job_title: str, job_desc: str) -> int:
     """
