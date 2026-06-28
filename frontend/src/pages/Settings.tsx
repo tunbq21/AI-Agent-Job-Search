@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, CheckCircle, Trash2, RefreshCw, X } from 'lucide-react';
 import axios from 'axios';
 
+import { toast as sonnerToast } from 'sonner';
+
 interface CVAnalysis {
   skills: string[];
   experience_years: number;
@@ -23,17 +25,12 @@ interface SavedResume {
 
 const Settings = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [preference, setPreference] = useState('');
-  // jobTitle is now an array
-  const [jobTitles, setJobTitles] = useState<string[]>([]);
-  const [currentJobInput, setCurrentJobInput] = useState('');
-  
-  const [location, setLocation] = useState('');
-  const [timeFilter, setTimeFilter] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [analysis, setAnalysis] = useState<CVAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previousFilename, setPreviousFilename] = useState<string | null>(null);
+  const [currentResumeId, setCurrentResumeId] = useState<number | null>(null);
+  const [isSearchingJobs, setIsSearchingJobs] = useState(false);
   
   // Saved CVs state
   const [savedResumes, setSavedResumes] = useState<SavedResume[]>([]);
@@ -56,69 +53,37 @@ const Settings = () => {
           summary: latest.summary || ''
         });
         setPreviousFilename(latest.filename);
-
-        if (latest.search_filters) {
-          const f = latest.search_filters;
-          setJobTitles(f.job_title ? f.job_title.split(', ').filter(Boolean) : []);
-          setLocation(f.location || '');
-          setTimeFilter(f.time_filter || '');
-          setPreference(f.preference || '');
-        }
+        setCurrentResumeId(latest.id);
       }
     } catch (err) {
       console.error("Failed to fetch past resume analysis", err);
     }
   };
 
-  const handleJobKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const val = currentJobInput.trim();
-      if (val && !jobTitles.includes(val)) {
-        setJobTitles([...jobTitles, val]);
-      }
-      setCurrentJobInput('');
-    }
-  };
 
-  const removeJobTag = (tag: string) => {
-    setJobTitles(jobTitles.filter(t => t !== tag));
-  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0];
     if (!selectedFile) return;
     
     setFile(selectedFile);
+    setError(null);
+  }, []);
+
+  const confirmUpload = async () => {
+    if (!file) return;
+    
     setIsProcessing(true);
     setError(null);
     setAnalysis(null);
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
-    if (preference.trim()) {
-      formData.append('preference', preference.trim());
-    }
-    
-    // Combine saved tags with the unsubmitted input
-    const finalTitles = [...jobTitles];
-    if (currentJobInput.trim() && !finalTitles.includes(currentJobInput.trim())) {
-      finalTitles.push(currentJobInput.trim());
-    }
-    
-    if (finalTitles.length > 0) {
-      formData.append('job_title', finalTitles.join(', '));
-    }
-    if (location.trim()) {
-      formData.append('location', location.trim());
-    }
-    if (timeFilter.trim()) {
-      formData.append('time_filter', timeFilter.trim());
-    }
+    formData.append('file', file);
 
     try {
       const analysisResponse = await axios.post('http://localhost:8000/resumes/', formData);
       setAnalysis(analysisResponse.data.analysis);
+      setCurrentResumeId(analysisResponse.data.resume_id);
       fetchResumes(); // Refresh saved resumes
     } catch (err: any) {
       console.error(err);
@@ -126,7 +91,7 @@ const Settings = () => {
     } finally {
       setIsProcessing(false);
     }
-  }, [preference, jobTitles, location, timeFilter]);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -146,15 +111,8 @@ const Settings = () => {
       summary: resume.summary || ''
     });
     setPreviousFilename(resume.filename);
+    setCurrentResumeId(resume.id);
     setFile(null);
-    
-    if (resume.search_filters) {
-      const f = resume.search_filters;
-      setJobTitles(f.job_title ? f.job_title.split(', ').filter(Boolean) : []);
-      setLocation(f.location || '');
-      setTimeFilter(f.time_filter || '');
-      setPreference(f.preference || '');
-    }
   };
 
   const deleteResume = async (id: number) => {
@@ -164,6 +122,7 @@ const Settings = () => {
       if (savedResumes.length === 1) { // If it was the last one
          setAnalysis(null);
          setPreviousFilename(null);
+         setCurrentResumeId(null);
       }
     } catch (err) {
       console.error(err);
@@ -183,7 +142,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full max-w-none mx-auto">
       <header className="mb-10">
         <h1 className="text-4xl font-extrabold text-content-strong mb-2 tracking-tight">My Profile</h1>
         <p className="text-content-muted">Upload your CV to let AI analyze and build your profile.</p>
@@ -191,74 +150,7 @@ const Settings = () => {
 
       {!isProcessing && !analysis && (
         <div className="space-y-6">
-          <div className="glass p-6 rounded-2xl space-y-4">
-            <h2 className="text-lg font-bold text-content-strong border-b border-surface-border pb-2">Search Preferences & Filters</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-content-muted font-semibold mb-1 text-sm">
-                  Desired Job Titles (Press Enter to add)
-                </label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {jobTitles.map((job, idx) => (
-                    <span key={idx} className="bg-primary/20 text-primary border border-primary/30 px-3 py-1 rounded-xl text-sm font-semibold shadow-sm flex items-center gap-1">
-                      {job}
-                      <button onClick={() => removeJobTag(job)} className="hover:text-red-500 focus:outline-none"><X size={14}/></button>
-                    </span>
-                  ))}
-                </div>
-                <input 
-                  type="text"
-                  value={currentJobInput}
-                  onChange={(e) => setCurrentJobInput(e.target.value)}
-                  onKeyDown={handleJobKeyDown}
-                  placeholder="e.g. Frontend Developer"
-                  className="w-full bg-surface border border-surface-border text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-content-muted font-semibold mb-1 text-sm">
-                  Preferred Location
-                </label>
-                <select 
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-surface border border-surface-border text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
-                >
-                  <option value="">Any Location / Toàn quốc</option>
-                  <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                  <option value="Hà Nội">Hà Nội</option>
-                  <option value="Đà Nẵng">Đà Nẵng</option>
-                  <option value="Remote">Remote</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-content-muted font-semibold mb-1 text-sm">
-                  Time Posted
-                </label>
-                <select 
-                  value={timeFilter}
-                  onChange={(e) => setTimeFilter(e.target.value)}
-                  className="w-full bg-surface border border-surface-border text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
-                >
-                  <option value="">Any Time</option>
-                  <option value="24h">Past 24 hours</option>
-                  <option value="7d">Past week</option>
-                  <option value="30d">Past month</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-content-muted font-semibold mb-1 text-sm">
-                Specific Requirements / Additional context (Optional)
-              </label>
-              <textarea 
-                value={preference}
-                onChange={(e) => setPreference(e.target.value)}
-                placeholder="e.g. I want to find AI Automation jobs or startup environments..."
-                className="w-full bg-surface border border-surface-border text-content-strong p-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none h-20 text-sm shadow-sm"
-              />
-            </div>
-          </div>
+
 
           <div 
             {...getRootProps()}
@@ -268,13 +160,28 @@ const Settings = () => {
                 : 'border-surface-border bg-surface-alt hover:border-primary hover:bg-surface-alt/50 shadow-sm'}`}
           >
             <input {...getInputProps()} />
-            <UploadCloud className={`w-16 h-16 mx-auto mb-4 ${isDragActive ? 'text-primary' : 'text-content-muted'}`} />
+            <UploadCloud className={`w-16 h-16 mx-auto mb-4 ${isDragActive || file ? 'text-primary' : 'text-content-muted'}`} />
             <h3 className="text-xl font-semibold text-content-strong">
-              {isDragActive ? 'Drop your CV here...' : 'Drag & drop your CV'}
+              {file ? `Selected: ${file.name}` : (isDragActive ? 'Drop your CV here...' : 'Drag & drop your CV')}
             </h3>
-            <p className="text-content-muted mt-2 text-sm">Supports PDF, TXT, DOCX up to 10MB</p>
+            <p className="text-content-muted mt-2 text-sm">{file ? 'Click or drag to change file' : 'Supports PDF, TXT, DOCX up to 10MB'}</p>
             {error && <p className="text-red-500 font-medium mt-4 bg-red-500/10 border border-red-500/30 px-4 py-2 rounded-xl inline-block">{error}</p>}
           </div>
+
+          {file && !isProcessing && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              className="mt-4"
+            >
+              <button 
+                onClick={confirmUpload}
+                className="w-full bg-primary hover:bg-primary-hover text-white py-4 rounded-xl font-bold transition-all shadow-md text-lg"
+              >
+                Xác nhận & Phân tích CV
+              </button>
+            </motion.div>
+          )}
 
           {savedResumes.length > 0 && (
             <div className="glass p-6 rounded-2xl mt-8">
@@ -353,15 +260,7 @@ const Settings = () => {
               </div>
             </div>
 
-            <div className="mb-8 p-4 bg-surface-alt rounded-xl border border-surface-border">
-              <strong className="text-content-muted text-xs font-bold uppercase tracking-wider block mb-3">Your Search Settings</strong>
-              <div className="grid grid-cols-2 gap-4 text-sm text-content-strong">
-                <div><span className="text-content-muted font-semibold">Location:</span> {location || 'Any'}</div>
-                <div><span className="text-content-muted font-semibold">Time:</span> {timeFilter || 'Any'}</div>
-                <div className="col-span-2"><span className="text-content-muted font-semibold">Added Titles:</span> {jobTitles.join(', ') || 'Auto'}</div>
-                <div className="col-span-2"><span className="text-content-muted font-semibold">Context (Message):</span> {preference || 'None'}</div>
-              </div>
-            </div>
+
 
             <div>
               <strong className="text-content-muted text-xs font-bold uppercase tracking-wider block mb-4">Core Skills Detected</strong>
@@ -374,16 +273,20 @@ const Settings = () => {
               </div>
             </div>
             
-            <button 
-              onClick={() => {
-                setAnalysis(null);
-                setFile(null);
-                setPreviousFilename(null);
-              }}
-              className="mt-10 bg-surface hover:bg-surface-alt/50 text-content-strong px-6 py-3 rounded-xl font-bold transition-colors border border-surface-border shadow-sm cursor-pointer"
-            >
-              Back to CV Manager / Upload
-            </button>
+            
+            <div className="mt-10 flex flex-wrap gap-4">
+              <button 
+                onClick={() => {
+                  setAnalysis(null);
+                  setFile(null);
+                  setPreviousFilename(null);
+                  setCurrentResumeId(null);
+                }}
+                className="bg-surface hover:bg-surface-alt/50 text-content-strong px-6 py-3 rounded-xl font-bold transition-colors border border-surface-border shadow-sm cursor-pointer flex-1"
+              >
+                Back to CV Manager
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

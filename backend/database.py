@@ -10,9 +10,9 @@ load_dotenv()
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///./jobsearch.db")
 
 if DATABASE_URL.startswith("sqlite"):
-    engine = create_async_engine(DATABASE_URL, echo=True, connect_args={"check_same_thread": False})
+    engine = create_async_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
 else:
-    engine = create_async_engine(DATABASE_URL, echo=True)
+    engine = create_async_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 Base = declarative_base()

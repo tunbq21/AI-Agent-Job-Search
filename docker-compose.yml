@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  jobsearch_net:
+    driver: bridge
+
 services:
   db:
     image: postgres:15
@@ -13,6 +17,26 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - jobsearch_net
+
+  api:
+    build: 
+      context: ./backend
+    container_name: job_search_api
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://jobuser:jobpassword@db:5432/jobsearch
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    networks:
+      - jobsearch_net
 
 volumes:
   postgres_data:

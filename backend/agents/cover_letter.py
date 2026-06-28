@@ -4,7 +4,7 @@ from google.genai import types
 from prompts.prompts import COVER_LETTER_PROMPT
 
 API_KEY = os.environ.get("GEMINI_API_KEY")
-PRO_MODEL = os.environ.get("GEMINI_PRO_MODEL", "gemini-2.5-pro")
+PRO_MODEL = os.environ.get("GEMINI_PRO_MODEL", "gemini-3.1-pro-preview")
 
 def get_client():
     if not API_KEY:

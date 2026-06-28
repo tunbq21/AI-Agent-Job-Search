@@ -59,7 +59,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto h-full flex flex-col">
+    <div className="w-full max-w-none mx-auto h-full flex flex-col">
       <header className="mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-extrabold text-content-strong mb-1 tracking-tight">Overview</h1>

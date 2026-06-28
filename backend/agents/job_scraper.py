@@ -5,7 +5,7 @@ from google.genai import types
 from prompts.prompts import JOB_SCRAPER_PROMPT, MATCH_SCORE_PROMPT
 
 API_KEY = os.environ.get("GEMINI_API_KEY")
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
 def get_client():
     if not API_KEY:
@@ -20,9 +20,9 @@ def scrape_jobs_from_web(desired_roles: list[str], time_filter: str = None) -> l
     if not desired_roles:
         return []
         
-    # Use only top 1 role
-    query_role = f'"{desired_roles[0]}"'
-    query = f"{query_role} job Vietnam"
+    # Use all desired roles to broaden search
+    query_role = " OR ".join([f'"{role}"' for role in desired_roles])
+    query = f"({query_role}) job Vietnam"
     
     time_instruction = ""
     if time_filter == "24h":
@@ -32,7 +32,55 @@ def scrape_jobs_from_web(desired_roles: list[str], time_filter: str = None) -> l
     elif time_filter == "30d":
         time_instruction = "posted in the past month"
         
-    grounding_prompt = f"Search Google for: {query}. CRITICAL: ONLY find jobs {time_instruction if time_instruction else 'recently posted'}. Return the raw job postings text."
+    grounding_prompt = f"Search Google for: {query}. CRITICAL: ONLY find jobs {time_instruction if time_instruction else 'recently posted'}. Return the raw job postings text for at least 30 distinct job listings. Please do your best to fetch as many relevant links and descriptions as possible."
+    
+    client = get_client()
+    
+    try:
+        search_response = client.models.generate_content(
+            model=MODEL,
+            contents=grounding_prompt,
+            config=types.GenerateContentConfig(
+                tools=[{"google_search": {}}]
+            )
+        )
+        raw_text = search_response.text
+        print("Successfully retrieved jobs via Google Grounding.")
+    except Exception as e:
+        print(f"Error fetching from Google Grounding: {e}")
+        return []
+    
+    prompt = JOB_SCRAPER_PROMPT.format(raw_text=raw_text)
+    
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=prompt
+        )
+        
+        text = response.text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+            
+        jobs = json.loads(text)
+        return jobs
+    except Exception as e:
+        print(f"Error parsing with Gemini: {e}")
+        return []
+
+def scrape_jobs_from_natural_query(user_query: str) -> list[dict]:
+    """
+    Searches the web for jobs based on a natural language query from the user,
+    then uses Gemini to parse them into structured job data.
+    """
+    if not user_query.strip():
+        return []
+        
+    grounding_prompt = f"Search Google for: {user_query}. Return the raw job postings text for at least 30 distinct job listings. Please do your best to fetch as many relevant links and descriptions as possible."
     
     client = get_client()
     

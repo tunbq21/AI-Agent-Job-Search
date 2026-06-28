@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Search, MapPin, DollarSign, ExternalLink, Briefcase, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -16,43 +17,28 @@ interface Job {
 }
 
 const Jobs = () => {
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session_id');
+  
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncing, setSyncing] = useState(false);
-  const [search, setSearch] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [selectedSource, setSelectedSource] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchingJobs, setIsSearchingJobs] = useState(false);
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [sessionId]);
 
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:8000/jobs/');
+      const url = sessionId ? `http://localhost:8000/jobs/?session_id=${sessionId}` : 'http://localhost:8000/jobs/';
+      const res = await axios.get(url);
       setJobs(res.data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const syncJobs = async () => {
-    try {
-      setSyncing(true);
-      await axios.post('http://localhost:8000/jobs/scrape');
-      setTimeout(() => {
-        fetchJobs();
-        setSyncing(false);
-        toast.success('✨ AI Agent đã tìm xong! Các công việc phù hợp đang được hiển thị ở danh sách bên dưới.');
-      }, 1500);
-    } catch (err) {
-      console.error(err);
-      setSyncing(false);
-      toast.error('Lỗi khi đồng bộ công việc.');
     }
   };
 
@@ -86,96 +72,78 @@ const Jobs = () => {
     }
   };
 
-  const filteredJobs = jobs.filter(
-    (job) => {
-      const matchesSearch = 
-        job.title.toLowerCase().includes(search.toLowerCase()) || 
-        job.company.toLowerCase().includes(search.toLowerCase()) ||
-        (job.description && job.description.toLowerCase().includes(search.toLowerCase()));
-      
-      const matchesLocation = 
-        !selectedLocation || 
-        job.location.toLowerCase().includes(selectedLocation.toLowerCase());
-      
-      const matchesSource = 
-        !selectedSource || 
-        job.source.toLowerCase() === selectedSource.toLowerCase();
+  const handleAISearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearchingJobs(true);
+    const searchPromise = axios.post('http://localhost:8000/jobs/search-by-query', {
+      query: searchQuery
+    });
+    
+    toast.promise(searchPromise, {
+      loading: 'AI đang lùng sục khắp internet để tìm job cho bạn... Vui lòng đợi nhé!',
+      success: 'Tìm kiếm hoàn tất!',
+      error: 'Lỗi khi tìm kiếm job. Vui lòng thử lại.',
+    });
 
-      // Mock time filter since we don't have posted_at in DB right now
-      const matchesTime = selectedTime ? true : true; // In a real app, we'd check job.created_at against selectedTime
-        
-      return matchesSearch && matchesLocation && matchesSource && matchesTime;
+    try {
+      await searchPromise;
+      // Fetch updated list of jobs after search
+      fetchJobs();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSearchingJobs(false);
     }
-  );
+  };
+
+  const filteredJobs = jobs; // We remove local filters to keep it simple and focused on the AI search as requested
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <header className="mb-10 flex justify-between items-end">
+    <div className="w-full max-w-none mx-auto px-4 md:px-8">
+      <header className="mb-10">
         <div>
           <h1 className="text-4xl font-extrabold text-content-strong mb-2 tracking-tight">Find Jobs</h1>
           <p className="text-content-muted">Discover your next career opportunity.</p>
         </div>
-        <button 
-          onClick={syncJobs}
-          disabled={syncing}
-          className="bg-gradient-to-r from-primary to-secondary hover:from-primary/80 hover:to-secondary/80 disabled:from-surface-border disabled:to-surface-border disabled:text-content-muted text-quaternary px-6 py-3 rounded-xl font-bold transition-all shadow-md cursor-pointer disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {syncing ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              Syncing...
-            </>
-          ) : (
-            'Sync Latest Jobs'
-          )}
-        </button>
       </header>
 
-      {/* Search and Filters */}
-      <div className="glass p-4 rounded-2xl flex flex-col md:flex-row gap-4 mb-8 items-center shadow-sm">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-content-muted w-5 h-5" />
-          <input 
-            type="text" 
-            placeholder="Search by job title, company, description..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-surface border border-surface-border text-content-strong pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm"
-          />
-        </div>
-        <div className="flex gap-3 w-full md:w-auto">
-          <select
-            value={selectedLocation}
-            onChange={(e) => setSelectedLocation(e.target.value)}
-            className="bg-surface border border-surface-border text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
-          >
-            <option value="">All Locations</option>
-            <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-            <option value="Hà Nội">Hà Nội</option>
-            <option value="Đà Nẵng">Đà Nẵng</option>
-            <option value="Remote">Remote</option>
-          </select>
-          <select
-            value={selectedSource}
-            onChange={(e) => setSelectedSource(e.target.value)}
-            className="bg-surface border border-surface-border text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
-          >
-            <option value="">All Platforms</option>
-            <option value="ITviec">ITviec</option>
-            <option value="TopCV">TopCV</option>
-            <option value="LinkedIn">LinkedIn</option>
-            <option value="Google Search">Google Search</option>
-          </select>
-          <select
-            value={selectedTime}
-            onChange={(e) => setSelectedTime(e.target.value)}
-            className="bg-surface border border-surface-border text-content-strong px-4 py-3 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm shadow-sm font-semibold cursor-pointer"
-          >
-            <option value="">Any Time</option>
-            <option value="24h">Past 24 hours</option>
-            <option value="7d">Past week</option>
-            <option value="30d">Past month</option>
-          </select>
+      {/* AI Conversational Search */}
+      <div className="glass p-8 rounded-3xl mb-10 shadow-sm border border-primary/30 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+        <h2 className="text-2xl font-extrabold text-content-strong mb-6 relative z-10 flex items-center gap-2">
+          <span className="text-3xl">✨</span> AI Job Finder
+        </h2>
+        <div className="flex flex-col gap-4 relative z-10">
+          <div className="relative w-full">
+            <textarea 
+              placeholder="Bạn muốn tìm công việc như thế nào? Ví dụ: 'Tìm cho tôi các job AI engineer có yêu cầu agency, lương trên 2000$, khu vực Hồ Chí Minh hoặc Remote...'" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleAISearch();
+                }
+              }}
+              className="w-full bg-surface/80 backdrop-blur-sm border-2 border-surface-border hover:border-primary/50 text-content-strong px-6 py-5 rounded-2xl focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all text-lg shadow-inner resize-none min-h-[120px]"
+              disabled={isSearchingJobs}
+            />
+          </div>
+          <div className="flex justify-end">
+            <button 
+              onClick={handleAISearch}
+              disabled={isSearchingJobs || !searchQuery.trim()}
+              className={`md:w-auto w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary-hover hover:to-blue-700 text-white px-10 py-5 rounded-2xl font-extrabold text-lg transition-all shadow-xl hover:shadow-primary/30 flex items-center justify-center gap-3 hover:-translate-y-1 ${isSearchingJobs ? 'opacity-70 cursor-wait' : ''}`}
+            >
+              {isSearchingJobs ? (
+                <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Search className="w-6 h-6" />
+              )}
+              {isSearchingJobs ? 'Đang săn việc...' : 'Bắt Đầu Tìm Kiếm'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -188,10 +156,10 @@ const Jobs = () => {
           {filteredJobs.length === 0 ? (
             <div className="text-center py-20 glass rounded-2xl border border-surface-border">
               <p className="text-content-muted text-lg font-medium">No matching jobs found.</p>
-              <p className="text-content-muted text-sm mt-1">Try resetting your filters or click "Sync Latest Jobs".</p>
+              <p className="text-content-muted text-sm mt-1">Try going to your Profile to perform a new search.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredJobs.map((job, idx) => (
                 <motion.div 
                   key={job.id}
@@ -245,7 +213,7 @@ const Jobs = () => {
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     </button>
-                    <a href={job.url} target="_blank" rel="noreferrer" title="Open Link" className="w-10 h-10 bg-surface hover:bg-surface-alt text-content-muted hover:text-content-strong rounded-xl flex items-center justify-center transition-colors border border-surface-border shadow-sm">
+                    <a href={job.url.startsWith('http') ? job.url : `https://${job.url}`} target="_blank" rel="noreferrer" title="Open Link" className="w-10 h-10 bg-surface hover:bg-surface-alt text-content-muted hover:text-content-strong rounded-xl flex items-center justify-center transition-colors border border-surface-border shadow-sm">
                       <ExternalLink size={18} />
                     </a>
                     <button 

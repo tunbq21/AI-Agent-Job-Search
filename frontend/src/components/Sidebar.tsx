@@ -7,9 +7,10 @@ const Sidebar = () => {
   const menuItems = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/jobs', icon: Briefcase, label: 'Find Jobs' },
+    { path: '/history', icon: FileText, label: 'History' },
     { path: '/kanban', icon: FileText, label: 'Applications' },
     { path: '/cover-letter', icon: FileText, label: 'Cover Letter' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+    { path: '/settings', icon: Settings, label: 'Profile' },
   ];
 
   return (

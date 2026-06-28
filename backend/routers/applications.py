@@ -103,7 +103,7 @@ async def generate_cover_letter(app_id: int, db: AsyncSession = Depends(get_db))
     Keep it concise (around 3 paragraphs). Be confident but humble.
     """
     
-    MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
     response = client.models.generate_content(
         model=MODEL,
         contents=prompt

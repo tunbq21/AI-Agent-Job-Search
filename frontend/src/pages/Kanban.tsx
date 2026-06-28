@@ -74,7 +74,7 @@ const Kanban = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto h-[calc(100vh-6rem)] flex flex-col">
+    <div className="w-full max-w-none mx-auto h-full flex flex-col">
       <header className="mb-8">
         <h1 className="text-4xl font-extrabold text-content-strong mb-2 tracking-tight">Application Tracker</h1>
         <p className="text-content-muted">Manage your job applications and generate AI Cover Letters.</p>
@@ -85,7 +85,7 @@ const Kanban = () => {
           const colApps = apps.filter((a) => a.status === col);
           
           return (
-            <div key={col} className="bg-surface-alt border border-surface-border rounded-2xl flex flex-col h-[calc(100vh-16rem)] overflow-hidden shadow-sm">
+            <div key={col} className="bg-surface-alt border border-surface-border rounded-2xl flex flex-col h-full overflow-hidden shadow-sm">
               <div className="p-4 border-b border-surface-border bg-surface-alt">
                 <h3 className="font-bold text-content-strong flex items-center justify-between">
                   {col}

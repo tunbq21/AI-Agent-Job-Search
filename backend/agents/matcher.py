@@ -10,8 +10,8 @@ from prompts.prompts import CV_EXTRACTOR_PROMPT, JOB_MATCHER_PROMPT
 # User will need to set this environment variable: set GEMINI_API_KEY=your_key
 # or we can use dotenv in the future
 API_KEY = os.environ.get("GEMINI_API_KEY")
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
-PRO_MODEL = os.environ.get("GEMINI_PRO_MODEL", "gemini-2.5-pro")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+PRO_MODEL = os.environ.get("GEMINI_PRO_MODEL", "gemini-3.1-pro-preview")
 
 def get_client():
     if not API_KEY:

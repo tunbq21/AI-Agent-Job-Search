@@ -4,7 +4,8 @@ from sqlalchemy import select
 
 from database import get_db
 from model import models
-from agents.job_scraper import scrape_jobs_from_web
+from pydantic import BaseModel
+from agents.job_scraper import scrape_jobs_from_web, scrape_jobs_from_natural_query
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
@@ -13,6 +14,53 @@ async def get_jobs(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(models.Job).order_by(models.Job.id.desc()))
     jobs = result.scalars().all()
     return jobs
+
+class JobSearchQuery(BaseModel):
+    query: str
+
+@router.post("/search-by-query")
+async def search_jobs_by_query(req: JobSearchQuery, db: AsyncSession = Depends(get_db)):
+    """
+    Uses DuckDuckGo/Google Grounding and Gemini to fetch jobs based on a natural language query.
+    """
+    query = req.query.strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+        
+    scraped_jobs_data = scrape_jobs_from_natural_query(query)
+    
+    if not scraped_jobs_data:
+        return {"message": "No jobs found or error occurred."}
+        
+    new_jobs_count = 0
+    scraped_urls = [job_data.get('url', '') for job_data in scraped_jobs_data if job_data.get('url')]
+    
+    existing_urls = set()
+    if scraped_urls:
+        existing_result = await db.execute(select(models.Job.url).where(models.Job.url.in_(scraped_urls)))
+        existing_urls = set(existing_result.scalars().all())
+
+    for job_data in scraped_jobs_data:
+        url = job_data.get('url', '')
+        if url in existing_urls:
+            continue
+            
+        new_job = models.Job(
+            title=job_data.get('title', 'Unknown Title')[:200],
+            company=job_data.get('company', 'Unknown Company')[:200],
+            location=job_data.get('location', 'Remote')[:200],
+            salary=job_data.get('salary', 'Negotiable')[:100],
+            description=job_data.get('description', '')[:1000],
+            url=job_data.get('url', '#')[:500],
+            source=job_data.get('source', 'Web Search')[:50]
+        )
+        db.add(new_job)
+        new_jobs_count += 1
+        
+    if new_jobs_count > 0:
+        await db.commit()
+        
+    return {"message": f"Successfully scraped and added {new_jobs_count} new jobs."}
 
 @router.post("/scrape")
 async def trigger_scrape(db: AsyncSession = Depends(get_db)):
@@ -41,10 +89,16 @@ async def trigger_scrape(db: AsyncSession = Depends(get_db)):
         return {"message": "No jobs found or error occurred."}
         
     new_jobs_count = 0
+    scraped_urls = [job_data.get('url', '') for job_data in scraped_jobs_data if job_data.get('url')]
+    
+    existing_urls = set()
+    if scraped_urls:
+        existing_result = await db.execute(select(models.Job.url).where(models.Job.url.in_(scraped_urls)))
+        existing_urls = set(existing_result.scalars().all())
+
     for job_data in scraped_jobs_data:
-        # Check if URL exists
-        existing_result = await db.execute(select(models.Job).where(models.Job.url == job_data.get('url', '')))
-        if existing_result.scalars().first():
+        url = job_data.get('url', '')
+        if url in existing_urls:
             continue
             
         new_job = models.Job(

@@ -6,6 +6,7 @@ import Jobs from './pages/Jobs';
 import Kanban from './pages/Kanban';
 import CoverLetterAgent from './pages/CoverLetterAgent';
 import Settings from './pages/Settings';
+import History from './pages/History';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="kanban" element={<Kanban />} />
             <Route path="cover-letter" element={<CoverLetterAgent />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="history" element={<History />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FileText, Link as LinkIcon, RefreshCw, Briefcase, ChevronDown, Type } from 'lucide-react';
+import { FileText, Link as LinkIcon, RefreshCw, ChevronDown, Type } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SavedResume {
@@ -27,15 +27,14 @@ const CoverLetterAgent = () => {
   const [jobUrl, setJobUrl] = useState('');
   const [selectedJobId, setSelectedJobId] = useState<number | ''>('');
   
-  const [wordCount, setWordCount] = useState('Ngắn gọn (~300 từ)');
+  const [wordCount, setWordCount] = useState('Tiêu chuẩn (~15-20 dòng)');
 
   const WORD_COUNT_OPTIONS = [
-    'Rất ngắn gọn (~150 từ)',
-    'Ngắn gọn (~300 từ)',
-    'Trung bình (~500 từ)',
-    'Chi tiết (~1000 từ)',
-    'Rất chi tiết (~1500 từ)',
-    'Cực kỳ chi tiết (>2000 từ)'
+    'Siêu ngắn gọn (3-4 câu)',
+    'Ngắn gọn (~10 dòng)',
+    'Tiêu chuẩn (~15-20 dòng)',
+    'Chi tiết (~30 dòng)',
+    'Rất chi tiết (tối đa 40 dòng)'
   ];
   
   const [isGenerating, setIsGenerating] = useState(false);
@@ -124,7 +123,7 @@ const CoverLetterAgent = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full max-w-none mx-auto">
       <header className="mb-10">
         <h1 className="text-4xl font-extrabold text-content-strong mb-2 tracking-tight">Cover Letter Agent</h1>
         <p className="text-content-muted">Let AI analyze the job requirements and your CV to write a highly tailored cover letter.</p>
