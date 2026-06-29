@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, CheckCircle, Trash2, RefreshCw, X } from 'lucide-react';
+import { UploadCloud, CheckCircle, Trash2, RefreshCw, X, Leaf } from 'lucide-react';
 import axios from 'axios';
 
 import { toast as sonnerToast } from 'sonner';
@@ -176,8 +176,9 @@ const Settings = () => {
             >
               <button 
                 onClick={confirmUpload}
-                className="w-full bg-primary hover:bg-primary-hover text-white py-4 rounded-xl font-bold transition-all shadow-md text-lg"
+                className="w-full bg-gradient-to-r from-[#C94A29] via-[#D97443] to-[#81B29A] hover:from-[#D95B39] hover:to-[#8CBFA6] text-white py-4 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-orange-600/20 hover:scale-[1.01] active:scale-[0.99] text-lg flex items-center justify-center gap-2"
               >
+                <Leaf className="w-5 h-5 animate-bounce" style={{ animationDuration: '3s' }} />
                 Xác nhận & Phân tích CV
               </button>
             </motion.div>

@@ -30,6 +30,15 @@ AI Agent Job Search is an intelligent web application designed to simplify the j
 - Node.js (v18+)
 - Python 3.10+
 
+### Quick Start (Windows)
+If you are on Windows, you can start both the backend and frontend development servers concurrently using the provided `run.bat` script:
+1. Double-click `run.bat` or run it from command prompt:
+   ```cmd
+   .\run.bat
+   ```
+This will open separate command prompt windows for the backend and frontend servers automatically.
+
+
 ### Backend Setup
 1. Navigate to the `backend` directory:
    ```bash

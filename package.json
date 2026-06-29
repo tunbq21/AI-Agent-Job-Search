@@ -1,0 +1,11 @@
+{
+  "name": "ai-agent-job-search-root",
+  "version": "1.0.0",
+  "description": "Root configuration to run backend and frontend concurrently",
+  "scripts": {
+    "install-all": "npm install --prefix frontend",
+    "backend": "cd backend && venv\\Scripts\\python main.py",
+    "frontend": "cd frontend && npm run dev",
+    "dev": "npx concurrently --kill-others \"npm run backend\" \"npm run frontend\""
+  }
+}
